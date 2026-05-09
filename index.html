@@ -1,10 +1,11 @@
+<!DOCTYPE html>
 <html lang="en">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.png">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
     <style>
         :root {
             --bg-color: #0d0d0d;
@@ -13,6 +14,7 @@
             --text-secondary: #888888;
             --accent-color: #cfcfcf;
             --border-color: #333333;
+            --commit-green: #39d353;
         }
 
         body {
@@ -81,6 +83,9 @@
             margin-bottom: 20px;
             border-left: 3px solid var(--accent-color);
             padding-left: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .phase-block {
@@ -150,17 +155,85 @@
             transform: rotate(45deg);
         }
 
-        .reset-btn {
+        .button-group {
+            display: flex;
+            gap: 10px;
             margin-top: 20px;
+        }
+
+        .reset-btn {
             background-color: transparent;
             color: #ff5555;
             border-color: #ff5555;
-            width: 100%;
+            flex: 1;
         }
 
         .reset-btn:hover {
             background-color: #ff5555;
             color: var(--bg-color);
+        }
+
+        .log-btn {
+            background-color: var(--commit-green);
+            color: var(--bg-color);
+            border-color: var(--commit-green);
+            flex: 2;
+            font-weight: bold;
+        }
+
+        .log-btn:hover {
+            background-color: #2ea043;
+            border-color: #2ea043;
+        }
+
+        /* History & Graph Styles */
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .history-list li {
+            border-bottom: 1px dashed var(--border-color);
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .history-date {
+            color: var(--text-secondary);
+        }
+
+        .graph-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            scrollbar-width: none;
+        }
+        
+        .graph-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .contribution-graph {
+            display: grid;
+            grid-template-rows: repeat(7, 14px);
+            grid-auto-flow: column;
+            grid-auto-columns: 14px;
+            gap: 4px;
+        }
+
+        .square {
+            width: 14px;
+            height: 14px;
+            background-color: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .square.active {
+            background-color: var(--commit-green);
+            box-shadow: 0 0 4px rgba(57, 211, 83, 0.4);
         }
     </style>
 </head>
@@ -181,212 +254,50 @@ const workoutData = [
         id: "day1",
         name: "Day 1: Upper Body",
         phases: [
-            {
-                name: "Phase 1: Warm-Up",
-                time: "15 Min",
-                rest: "",
-                exercises: [
-                    { name: "5 min light cardio to get warm.", sets: 1 },
-                    { name: "10 min dynamic stretching", sets: 1 }
-                ]
-            },
-            {
-                name: "Phase 2: Heavy Compounds",
-                time: "50 Min",
-                rest: "Rest 3 to 4 mins",
-                exercises: [
-                    { name: "Barbell Bench Press (x 5 reps)", sets: 5 },
-                    { name: "Barbell Rows (x 5-8 reps)", sets: 5 },
-                    { name: "Weighted Pull-ups / Heavy Lat Pulldowns (x 6-8 reps)", sets: 4 }
-                ]
-            },
-            {
-                name: "Phase 3: Hypertrophy & Arms",
-                time: "40 Min",
-                rest: "Rest 90 to 120 secs",
-                exercises: [
-                    { name: "Incline Dumbbell Press (x 8-10 reps)", sets: 4 },
-                    { name: "Seated Dumbbell Overhead Press (x 8-10 reps)", sets: 3 },
-                    { name: "Barbell Bicep Curls (x 8-10 reps)", sets: 3 },
-                    { name: "Skullcrushers (EZ Bar) (x 8-10 reps)", sets: 3 }
-                ]
-            },
-            {
-                name: "Phase 4: Cooldown",
-                time: "15 Min",
-                rest: "",
-                exercises: [
-                    { name: "Static stretching for chest, lats, and shoulders.", sets: 1 }
-                ]
-            }
+            { name: "Phase 1: Warm-Up", time: "15 Min", rest: "", exercises: [{ name: "5 min light cardio to get warm.", sets: 1 }, { name: "10 min dynamic stretching", sets: 1 }] },
+            { name: "Phase 2: Heavy Compounds", time: "50 Min", rest: "Rest 3 to 4 mins", exercises: [{ name: "Barbell Bench Press (x 5 reps)", sets: 5 }, { name: "Barbell Rows (x 5-8 reps)", sets: 5 }, { name: "Weighted Pull-ups / Heavy Lat Pulldowns (x 6-8 reps)", sets: 4 }] },
+            { name: "Phase 3: Hypertrophy & Arms", time: "40 Min", rest: "Rest 90 to 120 secs", exercises: [{ name: "Incline Dumbbell Press (x 8-10 reps)", sets: 4 }, { name: "Seated Dumbbell Overhead Press (x 8-10 reps)", sets: 3 }, { name: "Barbell Bicep Curls (x 8-10 reps)", sets: 3 }, { name: "Skullcrushers (EZ Bar) (x 8-10 reps)", sets: 3 }] },
+            { name: "Phase 4: Cooldown", time: "15 Min", rest: "", exercises: [{ name: "Static stretching for chest, lats, and shoulders.", sets: 1 }] }
         ]
     },
     {
         id: "day2",
         name: "Day 2: Lower Body",
         phases: [
-            {
-                name: "Phase 1: Warm-Up",
-                time: "15 Min",
-                rest: "",
-                exercises: [
-                    { name: "5 min incline walk.", sets: 1 },
-                    { name: "10 min dynamic stretching.", sets: 1 }
-                ]
-            },
-            {
-                name: "Phase 2: Heavy Compounds",
-                time: "55 Min",
-                rest: "Rest 4 to 5 mins",
-                exercises: [
-                    { name: "Barbell Squats (Back or Front) (x 5 reps)", sets: 5 },
-                    { name: "Romanian Deadlifts (RDLs) (x 8 reps)", sets: 4 }
-                ]
-            },
-            {
-                name: "Phase 3: Hypertrophy",
-                time: "35 Min",
-                rest: "Rest 90 to 120 secs",
-                exercises: [
-                    { name: "Leg Press (x 10-12 reps)", sets: 4 },
-                    { name: "Seated Leg Curls (x 10-12 reps)", sets: 3 },
-                    { name: "Standing Calf Raises (x 12-15 reps)", sets: 4 }
-                ]
-            },
-            {
-                name: "Phase 4: Cooldown",
-                time: "15 Min",
-                rest: "",
-                exercises: [
-                    { name: "Foam rolling and static stretching for quads, hamstrings, and glutes.", sets: 1 }
-                ]
-            }
+            { name: "Phase 1: Warm-Up", time: "15 Min", rest: "", exercises: [{ name: "5 min incline walk.", sets: 1 }, { name: "10 min dynamic stretching.", sets: 1 }] },
+            { name: "Phase 2: Heavy Compounds", time: "55 Min", rest: "Rest 4 to 5 mins", exercises: [{ name: "Barbell Squats (Back or Front) (x 5 reps)", sets: 5 }, { name: "Romanian Deadlifts (RDLs) (x 8 reps)", sets: 4 }] },
+            { name: "Phase 3: Hypertrophy", time: "35 Min", rest: "Rest 90 to 120 secs", exercises: [{ name: "Leg Press (x 10-12 reps)", sets: 4 }, { name: "Seated Leg Curls (x 10-12 reps)", sets: 3 }, { name: "Standing Calf Raises (x 12-15 reps)", sets: 4 }] },
+            { name: "Phase 4: Cooldown", time: "15 Min", rest: "", exercises: [{ name: "Foam rolling and static stretching for quads, hamstrings, and glutes.", sets: 1 }] }
         ]
     },
     {
         id: "day3",
         name: "Day 3: Push",
         phases: [
-            {
-                name: "Phase 1: Warm-Up",
-                time: "15 Min",
-                rest: "",
-                exercises: [
-                    { name: "Focus heavily on rotator cuff warm-ups and chest/shoulder dynamic stretching.", sets: 1 }
-                ]
-            },
-            {
-                name: "Phase 2: Primary Push",
-                time: "40 Min",
-                rest: "Rest 2 to 3 mins",
-                exercises: [
-                    { name: "Incline Barbell Bench Press (x 8-12 reps)", sets: 4 },
-                    { name: "Dumbbell Shoulder Press (x 8-12 reps)", sets: 4 }
-                ]
-            },
-            {
-                name: "Phase 3: Isolation Volume",
-                time: "50 Min",
-                rest: "Rest 90 secs",
-                exercises: [
-                    { name: "Cable Crossovers / Flat DB Flyes (x 12-15 reps)", sets: 4 },
-                    { name: "Lateral Raises (Dumbbell) (x 15-20 reps)", sets: 4 },
-                    { name: "Triceps Rope Pushdowns (x 12-15 reps)", sets: 4 },
-                    { name: "Overhead Cable Triceps Extensions (x 12-15 reps)", sets: 3 }
-                ]
-            },
-            {
-                name: "Phase 4: Cooldown",
-                time: "15 Min",
-                rest: "",
-                exercises: [
-                    { name: "Static stretching for chest and triceps.", sets: 1 }
-                ]
-            }
+            { name: "Phase 1: Warm-Up", time: "15 Min", rest: "", exercises: [{ name: "Focus heavily on rotator cuff warm-ups and chest/shoulder dynamic stretching.", sets: 1 }] },
+            { name: "Phase 2: Primary Push", time: "40 Min", rest: "Rest 2 to 3 mins", exercises: [{ name: "Incline Barbell Bench Press (x 8-12 reps)", sets: 4 }, { name: "Dumbbell Shoulder Press (x 8-12 reps)", sets: 4 }] },
+            { name: "Phase 3: Isolation Volume", time: "50 Min", rest: "Rest 90 secs", exercises: [{ name: "Cable Crossovers / Flat DB Flyes (x 12-15 reps)", sets: 4 }, { name: "Lateral Raises (Dumbbell) (x 15-20 reps)", sets: 4 }, { name: "Triceps Rope Pushdowns (x 12-15 reps)", sets: 4 }, { name: "Overhead Cable Triceps Extensions (x 12-15 reps)", sets: 3 }] },
+            { name: "Phase 4: Cooldown", time: "15 Min", rest: "", exercises: [{ name: "Static stretching for chest and triceps.", sets: 1 }] }
         ]
     },
     {
         id: "day4",
         name: "Day 4: Pull",
         phases: [
-            {
-                name: "Phase 1: Warm-Up",
-                time: "15 Min",
-                rest: "",
-                exercises: [
-                    { name: "Band pull-aparts, shoulder dislocates, light rowing.", sets: 1 }
-                ]
-            },
-            {
-                name: "Phase 2: Primary Pull",
-                time: "40 Min",
-                rest: "Rest 2 to 3 mins",
-                exercises: [
-                    { name: "Single-Arm Dumbbell Rows (x 8-12 reps per arm)", sets: 4 },
-                    { name: "Lat Pulldowns (Neutral or V-Grip) (x 10-12 reps)", sets: 4 }
-                ]
-            },
-            {
-                name: "Phase 3: Isolation Volume",
-                time: "50 Min",
-                rest: "Rest 90 secs",
-                exercises: [
-                    { name: "Seated Cable Rows (x 12-15 reps)", sets: 4 },
-                    { name: "Face Pulls (x 15-20 reps)", sets: 4 },
-                    { name: "Hammer Curls (Dumbbell or Cable) (x 10-15 reps)", sets: 4 },
-                    { name: "Incline Dumbbell Bicep Curls (x 10-12 reps)", sets: 3 }
-                ]
-            },
-            {
-                name: "Phase 4: Cooldown",
-                time: "15 Min",
-                rest: "",
-                exercises: [
-                    { name: "Hanging from a pull-up bar to decompress the spine, static lat stretches.", sets: 1 }
-                ]
-            }
+            { name: "Phase 1: Warm-Up", time: "15 Min", rest: "", exercises: [{ name: "Band pull-aparts, shoulder dislocates, light rowing.", sets: 1 }] },
+            { name: "Phase 2: Primary Pull", time: "40 Min", rest: "Rest 2 to 3 mins", exercises: [{ name: "Single-Arm Dumbbell Rows (x 8-12 reps per arm)", sets: 4 }, { name: "Lat Pulldowns (Neutral or V-Grip) (x 10-12 reps)", sets: 4 }] },
+            { name: "Phase 3: Isolation Volume", time: "50 Min", rest: "Rest 90 secs", exercises: [{ name: "Seated Cable Rows (x 12-15 reps)", sets: 4 }, { name: "Face Pulls (x 15-20 reps)", sets: 4 }, { name: "Hammer Curls (Dumbbell or Cable) (x 10-15 reps)", sets: 4 }, { name: "Incline Dumbbell Bicep Curls (x 10-12 reps)", sets: 3 }] },
+            { name: "Phase 4: Cooldown", time: "15 Min", rest: "", exercises: [{ name: "Hanging from a pull-up bar to decompress the spine, static lat stretches.", sets: 1 }] }
         ]
     },
     {
         id: "day5",
         name: "Day 5: Legs",
         phases: [
-            {
-                name: "Phase 1: Warm-Up",
-                time: "15 Min",
-                rest: "",
-                exercises: [
-                    { name: "5 min bike.", sets: 1 },
-                    { name: "10 min deep hip and ankle mobility work.", sets: 1 }
-                ]
-            },
-            {
-                name: "Phase 2: Primary Quads & Glutes",
-                time: "40 Min",
-                rest: "Rest 2 to 3 mins",
-                exercises: [
-                    { name: "Hack Squats / Goblet Squats (x 10-12 reps)", sets: 4 },
-                    { name: "Bulgarian Split Squats (x 8-10 reps per leg)", sets: 3 }
-                ]
-            },
-            {
-                name: "Phase 3: Isolation Volume",
-                time: "50 Min",
-                rest: "Rest 90 secs",
-                exercises: [
-                    { name: "Leg Extensions (x 12-15 reps)", sets: 4 },
-                    { name: "Lying Leg Curls (x 12-15 reps)", sets: 4 },
-                    { name: "Seated Calf Raises (x 15-20 reps)", sets: 5 }
-                ]
-            },
-            {
-                name: "Phase 4: Cooldown",
-                time: "15 Min",
-                rest: "",
-                exercises: [
-                    { name: "Final foam roll and deep lower-body static stretching.", sets: 1 }
-                ]
-            }
+            { name: "Phase 1: Warm-Up", time: "15 Min", rest: "", exercises: [{ name: "5 min bike.", sets: 1 }, { name: "10 min deep hip and ankle mobility work.", sets: 1 }] },
+            { name: "Phase 2: Primary Quads & Glutes", time: "40 Min", rest: "Rest 2 to 3 mins", exercises: [{ name: "Hack Squats / Goblet Squats (x 10-12 reps)", sets: 4 }, { name: "Bulgarian Split Squats (x 8-10 reps per leg)", sets: 3 }] },
+            { name: "Phase 3: Isolation Volume", time: "50 Min", rest: "Rest 90 secs", exercises: [{ name: "Leg Extensions (x 12-15 reps)", sets: 4 }, { name: "Lying Leg Curls (x 12-15 reps)", sets: 4 }, { name: "Seated Calf Raises (x 15-20 reps)", sets: 5 }] },
+            { name: "Phase 4: Cooldown", time: "15 Min", rest: "", exercises: [{ name: "Final foam roll and deep lower-body static stretching.", sets: 1 }] }
         ]
     }
 ];
@@ -394,11 +305,15 @@ const workoutData = [
 const navContainer = document.getElementById('nav');
 const displayContainer = document.getElementById('workout-display');
 
-// Load saved data from localStorage
 let savedProgress = JSON.parse(localStorage.getItem('workoutProgress')) || {};
+let workoutHistory = JSON.parse(localStorage.getItem('workoutHistoryLog')) || [];
 
 function saveProgress() {
     localStorage.setItem('workoutProgress', JSON.stringify(savedProgress));
+}
+
+function saveHistory() {
+    localStorage.setItem('workoutHistoryLog', JSON.stringify(workoutHistory));
 }
 
 function renderNav() {
@@ -409,10 +324,15 @@ function renderNav() {
         btn.onclick = () => renderDay(day.id, btn);
         navContainer.appendChild(btn);
     });
+
+    const historyBtn = document.createElement('button');
+    historyBtn.innerText = `History`;
+    historyBtn.style.borderColor = "var(--commit-green)";
+    historyBtn.onclick = () => renderHistory(historyBtn);
+    navContainer.appendChild(historyBtn);
 }
 
 function renderDay(dayId, activeBtn) {
-    // Update active button styling
     document.querySelectorAll('.nav-buttons button').forEach(b => b.classList.remove('active'));
     if(activeBtn) activeBtn.classList.add('active');
 
@@ -430,11 +350,9 @@ function renderDay(dayId, activeBtn) {
         
         phase.exercises.forEach((ex, eIndex) => {
             html += `<div class="exercise"><span class="exercise-name">> ${ex.name}</span><div class="sets-container">`;
-            
             for(let i = 1; i <= ex.sets; i++) {
                 const boxId = `${day.id}-p${pIndex}-e${eIndex}-s${i}`;
                 const isChecked = savedProgress[boxId] ? 'checked' : '';
-                
                 html += `
                 <label class="set-box">
                     <input type="checkbox" id="${boxId}" onchange="toggleSet('${boxId}')" ${isChecked}>
@@ -446,39 +364,143 @@ function renderDay(dayId, activeBtn) {
         html += `</div>`;
     });
 
-    html += `<button class="reset-btn" onclick="resetDay('${day.id}')">Reset ${day.name} Progress</button>`;
+    html += `
+    <div class="button-group">
+        <button class="reset-btn" onclick="resetDay('${day.id}')">Reset Progress</button>
+        <button class="log-btn" onclick="logWorkout('${day.id}', '${day.name}')">Log Workout</button>
+    </div>`;
+    
     displayContainer.innerHTML = html;
 }
 
-// Global function for the checkboxes
+// Generates the GitHub-style squares
+function generateGraphHtml() {
+    const historyDates = new Set();
+    const currentYear = new Date().getFullYear();
+    
+    workoutHistory.forEach(entry => {
+        if(entry.dateId) {
+            historyDates.add(entry.dateId);
+        } else {
+            const parsed = new Date(`${entry.date}, ${currentYear}`);
+            if(!isNaN(parsed)) {
+                const y = parsed.getFullYear();
+                const m = String(parsed.getMonth() + 1).padStart(2, '0');
+                const d = String(parsed.getDate()).padStart(2, '0');
+                historyDates.add(`${y}-${m}-${d}`);
+            }
+        }
+    });
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const currentDayOfWeek = today.getDay(); 
+    
+    const weeksToShow = 20; 
+    const totalDays = (weeksToShow * 7) + (currentDayOfWeek + 1);
+    
+    let squaresHtml = '';
+    
+    for (let i = totalDays - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+        
+        const isActive = historyDates.has(dateString);
+        squaresHtml += `<div class="square ${isActive ? 'active' : ''}"></div>`;
+    }
+
+    return `
+    <div class="graph-wrapper" id="graph-wrapper">
+        <div class="contribution-graph">
+            ${squaresHtml}
+        </div>
+    </div>`;
+}
+
+window.renderHistory = function(activeBtn) {
+    document.querySelectorAll('.nav-buttons button').forEach(b => b.classList.remove('active'));
+    if(activeBtn) activeBtn.classList.add('active');
+
+    let html = `
+    <div class="day-title">
+        <span>Activity</span>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">${workoutHistory.length} Total</span>
+    </div>`;
+
+    html += generateGraphHtml();
+
+    if (workoutHistory.length === 0) {
+        html += `<p style="color: var(--text-secondary); text-align: center; margin-top: 50px;">No workouts logged yet. Get to work!</p>`;
+    } else {
+        html += `<div class="phase-block"><ul class="history-list">`;
+        workoutHistory.forEach(entry => {
+            html += `
+            <li>
+                <span class="history-date">${entry.date}</span>
+                <span>${entry.workout}</span>
+            </li>`;
+        });
+        html += `</ul></div>`;
+    }
+
+    displayContainer.innerHTML = html;
+
+    setTimeout(() => {
+        const wrapper = document.getElementById('graph-wrapper');
+        if(wrapper) wrapper.scrollLeft = wrapper.scrollWidth;
+    }, 10);
+}
+
 window.toggleSet = function(boxId) {
     const checkbox = document.getElementById(boxId);
     savedProgress[boxId] = checkbox.checked;
     saveProgress();
 }
 
-// Global function to clear a specific day
-window.resetDay = function(dayId) {
-    if(confirm('Are you sure you want to uncheck all sets for this day?')) {
+window.resetDay = function(dayId, silent = false) {
+    if(silent || confirm('Are you sure you want to uncheck all sets for this day?')) {
         Object.keys(savedProgress).forEach(key => {
             if(key.startsWith(dayId)) {
                 delete savedProgress[key];
             }
         });
         saveProgress();
-        // Re-render current day
-        const activeBtn = document.querySelector('.nav-buttons button.active');
-        renderDay(dayId, activeBtn);
+        if(!silent) {
+            const activeBtn = document.querySelector('.nav-buttons button.active');
+            renderDay(dayId, activeBtn);
+        }
+    }
+}
+
+window.logWorkout = function(dayId, dayName) {
+    if(confirm(`Log ${dayName} as completed today?`)) {
+        const now = new Date();
+        const todayStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const dateId = `${year}-${month}-${day}`;
+        
+        workoutHistory.unshift({ date: todayStr, dateId: dateId, workout: dayName });
+        saveHistory();
+
+        resetDay(dayId, true); 
+        
+        const historyBtn = document.querySelectorAll('.nav-buttons button')[workoutData.length];
+        renderHistory(historyBtn);
     }
 }
 
 // Initialize
 renderNav();
-// Auto-load Day 1
 renderDay(workoutData[0].id, navContainer.firstChild);
 
 </script>
 </body>
 </html>
-
-
